@@ -76,6 +76,36 @@ export default function SentVideoQualityThrottler(localMediaModel, callParticipa
 }
 SentVideoQualityThrottler.prototype = {
 
+	QUALITY: QUALITY,
+
+	setAvailableVideosThreshold: function(availableVideosThreshold) {
+		this._validateThreshold(availableVideosThreshold)
+
+		this._availableVideosThreshold = availableVideosThreshold
+
+		this._adjustVideoQualityIfNeeded()
+	},
+
+	setAvailableAudiosThreshold: function(availableAudiosThreshold) {
+		this._validateThreshold(availableAudiosThreshold)
+
+		this._availableAudiosThreshold = availableAudiosThreshold
+
+		this._adjustVideoQualityIfNeeded()
+	},
+
+	_validateThreshold: function(threshold) {
+		for (let i = QUALITY.THUMBNAIL; i <= QUALITY.HIGH; i++) {
+			if (!(i in threshold)) {
+				throw new Error('No threshold for quality ' + i)
+			}
+
+			if (i > QUALITY.THUMBNAIL && threshold[i] > threshold[i - 1]) {
+				console.warn('Threshold for quality ' + i + ' (' + threshold[i] + ') > threshold for quality ' + (i - 1) + ' (' + threshold[i - 1] + '), it will be ignored')
+			}
+		}
+	},
+
 	destroy: function() {
 		this._localMediaModel.off('change:videoAvailable', this._handleLocalVideoAvailableChangeBound)
 
