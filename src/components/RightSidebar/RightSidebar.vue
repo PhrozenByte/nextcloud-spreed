@@ -136,7 +136,7 @@
 			:name="t('spreed', 'Settings')"
 			icon="icon-settings">
 			<SetGuestUsername v-if="!getUserId" />
-			<LocalVideoQualitySettings v-if="isInCall" />
+			<LocalVideoQualitySettings v-if="isInCall" :token="token" />
 		</AppSidebarTab>
 	</AppSidebar>
 </template>

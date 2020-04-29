@@ -100,6 +100,28 @@ LocalCallParticipantModel.prototype = {
 		this._webRtc.sendDirectlyToAll('status', 'nickChanged', guestName)
 	},
 
+	forceAvailableVideosThreshold: function(availableVideosThreshold) {
+		if (!this._webRtc) {
+			throw new Error('WebRtc not initialized yet')
+		}
+
+		this._webRtc.sendToAll('control', {
+			action: 'forceAvailableVideosThreshold',
+			threshold: availableVideosThreshold,
+		})
+	},
+
+	forceAvailableAudiosThreshold: function(availableAudiosThreshold) {
+		if (!this._webRtc) {
+			throw new Error('WebRtc not initialized yet')
+		}
+
+		this._webRtc.sendToAll('control', {
+			action: 'forceAvailableAudiosThreshold',
+			threshold: availableAudiosThreshold,
+		})
+	},
+
 	_handleForcedMute: function() {
 		this._trigger('forcedMute')
 	},

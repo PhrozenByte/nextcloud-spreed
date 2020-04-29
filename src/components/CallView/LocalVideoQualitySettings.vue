@@ -20,6 +20,12 @@
 
 <template>
 	<div>
+		<div v-if="selfIsModerator">
+			<input v-model="applyThresholdsToAllUsers"
+				type="checkbox"
+				name="applyThresholdsToAllUsers">
+			<label for="applyThresholdsToAllUsers">Apply threshold to all users</label>
+		</div>
 		<div>
 			<p>Videos threshold for thumbnail: {{ availableVideosThresholdForThumbnail }}</p>
 			<input v-model="availableVideosThresholdForThumbnail"
@@ -88,15 +94,28 @@
 </template>
 
 <script>
-import { getSentVideoQualityThrottler } from '../../utils/webrtc/index'
+import { PARTICIPANT } from '../../constants'
+import {
+	getSentVideoQualityThrottler,
+	localCallParticipantModel,
+} from '../../utils/webrtc/index'
 
 export default {
 
 	name: 'LocalVideoQualitySettings',
 
+	props: {
+		token: {
+			type: String,
+			required: true,
+		},
+	},
+
 	data() {
 		return {
 			sentVideoQualityThrottler: null,
+
+			applyThresholdsToAllUsers: false,
 
 			availableVideosThresholdForThumbnail: 0,
 			availableVideosThresholdForVeryLowQuality: 0,
@@ -112,25 +131,68 @@ export default {
 		}
 	},
 
+	computed: {
+		currentParticipant() {
+			return this.$store.getters.conversation(this.token) || {
+				sessionId: '0',
+				participantType: this.$store.getters.getUserId() !== null ? PARTICIPANT.TYPE.USER : PARTICIPANT.TYPE.GUEST,
+			}
+		},
+
+		selfIsModerator() {
+			return this.isParticipantTypeModerator(this.currentParticipant.participantType)
+		},
+	},
+
+	watch: {
+
+		applyThresholdsToAllUsers: function(applyThresholdsToAllUsers) {
+			if (applyThresholdsToAllUsers) {
+				localCallParticipantModel.forceAvailableVideosThreshold(this.getAvailableVideosThreshold())
+				localCallParticipantModel.forceAvailableAudiosThreshold(this.getAvailableAudiosThreshold())
+			}
+		},
+
+	},
+
 	mounted() {
 		this.sentVideoQualityThrottler = getSentVideoQualityThrottler()
 
-		this.availableVideosThresholdForThumbnail = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.THUMBNAIL]
-		this.availableVideosThresholdForVeryLowQuality = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.VERY_LOW]
-		this.availableVideosThresholdForLowQuality = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.LOW]
-		this.availableVideosThresholdForMediumQuality = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.MEDIUM]
-		this.availableVideosThresholdForHighQuality = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.HIGH]
+		this.sentVideoQualityThrottler.on('change:availableVideosThreshold', this.updateAvailableVideosThresholdFromThrottler)
+		this.sentVideoQualityThrottler.on('change:availableAudiosThreshold', this.updateAvailableAudiosThresholdFromThrottler)
 
-		this.availableAudiosThresholdForThumbnail = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.THUMBNAIL]
-		this.availableAudiosThresholdForVeryLowQuality = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.VERY_LOW]
-		this.availableAudiosThresholdForLowQuality = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.LOW]
-		this.availableAudiosThresholdForMediumQuality = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.MEDIUM]
-		this.availableAudiosThresholdForHighQuality = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.HIGH]
+		this.updateAvailableVideosThresholdFromThrottler()
+		this.updateAvailableAudiosThresholdFromThrottler()
+	},
+
+	destroyed() {
+		this.sentVideoQualityThrottler.off('change:availableVideosThreshold', this.updateAvailableVideosThresholdFromThrottler)
+		this.sentVideoQualityThrottler.off('change:availableAudiosThreshold', this.updateAvailableAudiosThresholdFromThrottler)
 	},
 
 	methods: {
 
-		updateAvailableVideosThreshold() {
+		isParticipantTypeModerator(participantType) {
+			return [PARTICIPANT.TYPE.OWNER, PARTICIPANT.TYPE.MODERATOR, PARTICIPANT.TYPE.GUEST_MODERATOR].indexOf(participantType) !== -1
+		},
+
+		updateAvailableVideosThresholdFromThrottler() {
+			this.availableVideosThresholdForThumbnail = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.THUMBNAIL]
+			this.availableVideosThresholdForVeryLowQuality = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.VERY_LOW]
+			this.availableVideosThresholdForLowQuality = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.LOW]
+			this.availableVideosThresholdForMediumQuality = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.MEDIUM]
+			this.availableVideosThresholdForHighQuality = this.sentVideoQualityThrottler._availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.HIGH]
+		},
+
+		updateAvailableAudiosThresholdFromThrottler() {
+			this.availableAudiosThresholdForThumbnail = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.THUMBNAIL]
+			this.availableAudiosThresholdForVeryLowQuality = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.VERY_LOW]
+			this.availableAudiosThresholdForLowQuality = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.LOW]
+			this.availableAudiosThresholdForMediumQuality = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.MEDIUM]
+			this.availableAudiosThresholdForHighQuality = this.sentVideoQualityThrottler._availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.HIGH]
+		},
+
+		getAvailableVideosThreshold() {
 			const availableVideosThreshold = {}
 			availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.THUMBNAIL] = this.availableVideosThresholdForThumbnail
 			availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.VERY_LOW] = this.availableVideosThresholdForVeryLowQuality
@@ -138,10 +200,20 @@ export default {
 			availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.MEDIUM] = this.availableVideosThresholdForMediumQuality
 			availableVideosThreshold[this.sentVideoQualityThrottler.QUALITY.HIGH] = this.availableVideosThresholdForHighQuality
 
-			this.sentVideoQualityThrottler.setAvailableVideosThreshold(availableVideosThreshold)
+			return availableVideosThreshold
 		},
 
-		updateAvailableAudiosThreshold() {
+		updateAvailableVideosThreshold() {
+			const availableVideosThreshold = this.getAvailableVideosThreshold()
+
+			this.sentVideoQualityThrottler.setAvailableVideosThreshold(availableVideosThreshold)
+
+			if (this.applyThresholdsToAllUsers) {
+				localCallParticipantModel.forceAvailableVideosThreshold(availableVideosThreshold)
+			}
+		},
+
+		getAvailableAudiosThreshold() {
 			const availableAudiosThreshold = {}
 			availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.THUMBNAIL] = this.availableAudiosThresholdForThumbnail
 			availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.VERY_LOW] = this.availableAudiosThresholdForVeryLowQuality
@@ -149,7 +221,17 @@ export default {
 			availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.MEDIUM] = this.availableAudiosThresholdForMediumQuality
 			availableAudiosThreshold[this.sentVideoQualityThrottler.QUALITY.HIGH] = this.availableAudiosThresholdForHighQuality
 
+			return availableAudiosThreshold
+		},
+
+		updateAvailableAudiosThreshold() {
+			const availableAudiosThreshold = this.getAvailableAudiosThreshold()
+
 			this.sentVideoQualityThrottler.setAvailableAudiosThreshold(availableAudiosThreshold)
+
+			if (this.applyThresholdsToAllUsers) {
+				localCallParticipantModel.forceAvailableAudiosThreshold(availableAudiosThreshold)
+			}
 		},
 
 	},

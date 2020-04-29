@@ -131,7 +131,7 @@ async function signalingJoinCall(token) {
 
 	currentToken = token
 
-	sentVideoQualityThrottler = new SentVideoQualityThrottler(localMediaModel, callParticipantCollection)
+	sentVideoQualityThrottler = new SentVideoQualityThrottler(localMediaModel, callParticipantCollection, signaling)
 
 	return new Promise((resolve, reject) => {
 		startedCall = resolve
