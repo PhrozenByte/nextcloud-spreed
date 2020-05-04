@@ -36,19 +36,19 @@
 						:token="token"
 						:model="callParticipantModel"
 						:is-grid="true"
-						:fit-video="true"
+						:fit-video="false"
 						:video-container-aspect-ratio="videoContainerAspectRatio"
 						:shared-data="{videoEnabled: true}" />
 				</template>
 				<LocalVideo ref="localVideo"
 					class="video"
 					:is-grid="true"
+					:fit-video="false"
 					:local-media-model="localMediaModel"
 					:show-video-overlay="showVideoOverlay"
 					:video-container-aspect-ratio="videoContainerAspectRatio"
 					:local-call-participant-model="localCallParticipantModel"
 					:use-constrained-layout="false"
-					:fit-video="isStripe"
 					@switchScreenToId="1" />
 			</template>
 			<!-- Grid developer mode -->
@@ -174,6 +174,9 @@ export default {
 			type: String,
 			required: true,
 		},
+		/**
+		 * To be set to true if the grid is used in the promoted view component.
+		 */
 		isStripe: {
 			type: Boolean,
 			default: false,

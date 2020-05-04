@@ -29,7 +29,6 @@
 						:key="callParticipantModel.attributes.peerId"
 						:token="token"
 						:model="callParticipantModel"
-						:video-container-aspect-ratio="asdas"
 						:shared-data="sharedDatas[callParticipantModel.attributes.peerId]"
 						:use-constrained-layout="useConstrainedLayout"
 						:is-grid="true"
@@ -177,7 +176,7 @@ export default {
 	left: 0;
 	width: 100%;
 	display: block;
-	height: 300px;
+	height: 250px;
 }
 
 .video__promoted {
@@ -202,7 +201,6 @@ export default {
 .participants-2.screensharing .videoContainer {
 	position: relative;
 	width: 100%;
-	padding: 0 2%;
 	-webkit-box-flex: auto;
 	-moz-box-flex: auto;
 	-webkit-flex: auto;

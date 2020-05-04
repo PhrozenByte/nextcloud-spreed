@@ -26,8 +26,8 @@
 		<video v-if="!placeholderForPromoted && !isPromotedInGrid"
 			v-show="model.attributes.videoAvailable && sharedData.videoEnabled"
 			ref="video"
-			:class="{'picture-grid': isGrid }"
-			:style="videoStyle" />
+			:class="videoClass"
+			class="video" />
 		<transition name="fade">
 			<div v-if="!placeholderForPromoted" v-show="!model.attributes.videoAvailable || !sharedData.videoEnabled" class="avatar-container">
 				<VideoBackground v-if="isGrid" :display-name="model.attributes.name" :user="model.attributes.userId" />
@@ -406,12 +406,19 @@ export default {
 	opacity: .8 !important;
 }
 
-.picture-grid {
-	/* Center the video */
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%,-50%) !important;
+.video {
+	height: 100%;
+	width: 100%;
+}
+
+.video--fit {
+	/* Fit the frame */
+	object-fit: contain;
+}
+
+.video--fill {
+	/* Fill the frame */
+	object-fit: cover;
 }
 
 .speaking-shadow {

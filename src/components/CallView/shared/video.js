@@ -20,8 +20,6 @@
  *
  */
 
-import debounce from 'debounce'
-
 const video = {
 
 	data() {
@@ -48,44 +46,13 @@ const video = {
 		},
 	},
 
-	watch: {
-		// If the parent aspect ratio changes, we might need to change the video
-		// css rules
-		videoContainerAspectRatio() {
-			debounce(this.getVideoStyle(), 200)
-		},
-		// If the video stream is enabled, get the style of the video element
-		hasVideoStream() {
-			this.getVideoStyle()
-		},
-	},
-
-	methods: {
-		// Get the width and height rules for the video element
-		getVideoStyle() {
-			// Get the incoming video aspect ratio
-			this.getIncomingStreamAspectRatio()
-			// Compare it with the parent's aspect ratio
+	computed: {
+		videoClass() {
 			if (this.fitVideo) {
-				if (this.videoContainerAspectRatio >= this.incomingStreamAspectRatio) {
-
-					this.videoStyle = { width: 'auto', height: '100%' }
-				} else {
-					this.videoStyle = { width: '100%', height: 'auto' }
-				}
+				return 'video--fit'
 			} else {
-				if (this.videoContainerAspectRatio >= this.incomingStreamAspectRatio) {
-					this.videoStyle = { width: '100%', height: 'auto' }
-				} else {
-					this.videoStyle = { width: 'auto', height: '100%' }
-				}
+				return 'video--fill'
 			}
-		},
-		// Get the aspect ratio of the incoming stream
-		getIncomingStreamAspectRatio() {
-			const incomingStreamWidth = this.$refs.video.videoWidth
-			const incomingStreamHeight = this.$refs.video.videoHeight
-			this.incomingStreamAspectRatio = incomingStreamWidth / incomingStreamHeight
 		},
 	},
 }
